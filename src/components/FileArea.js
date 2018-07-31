@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import csvparse from 'csv-parse';
+import csvparse from 'csv-parse/lib/es5';
 import { read as XLSXread, utils as XLSXutils } from 'xlsx';
 import Upload from './Upload';
 
