@@ -51,7 +51,6 @@ export default class Mapper extends Component {
     }
 
     drop(column) {
-        console.log(column);
         if (this.state.active) {
             this.props.onMap(this.state.active, column);
         }
