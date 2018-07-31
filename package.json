@@ -2,6 +2,7 @@
   "name": "import-mapper",
   "version": "0.1.0",
   "private": true,
+  "homepage": "http://chrismilway.github.io/import-mapper-demo",
   "dependencies": {
     "csv-parse": "^2.5.0",
     "react": "^16.4.1",
