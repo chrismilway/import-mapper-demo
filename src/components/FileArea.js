@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import csv from 'csv';
-import xlsx from 'xlsx';
+import csvparse from 'csv-parse';
+import { read as XLSXread, utils as XLSXutils } from 'xlsx';
 import Upload from './Upload';
 
 export default class FileArea extends Component {
@@ -55,7 +55,7 @@ export default class FileArea extends Component {
     loadCSV(file) {
         const reader = new FileReader();
         reader.addEventListener('load', (e) => {
-            csv.parse(e.target.result, (err, data) => {
+            csvparse(e.target.result, (err, data) => {
                 this.props.loadData(data, file.name);
             });
         });
@@ -66,9 +66,9 @@ export default class FileArea extends Component {
         const reader = new FileReader();
         reader.addEventListener('load', (e) => {
             const bstr = e.target.result;
-            const wb = xlsx.read(bstr, {type: 'binary'});
+            const wb = XLSXread(bstr, {type: 'binary'});
             const ws = wb.Sheets[wb.SheetNames[0]];
-            this.props.loadData(xlsx.utils.sheet_to_json(ws, {header: 1}), file.name);
+            this.props.loadData(XLSXutils.sheet_to_json(ws, {header: 1}), file.name);
         });
         reader.readAsBinaryString(file);
     }
