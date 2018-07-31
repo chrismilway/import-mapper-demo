@@ -299,6 +299,15 @@ span + .default-value {
   to { transform: translateY(48px) }
 }
 
+.app-file-area--error .upload-icon {
+  animation: shake .2s ease infinite;
+}
+
+@keyframes shake {
+  25% { transform: translateX(.25rem); }
+  75% { transform: translateX(-.25rem); }
+}
+
 .file-button {
   display: inline-block;
   padding: 0 .75rem;

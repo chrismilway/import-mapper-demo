@@ -9,6 +9,7 @@ export default class FileArea extends Component {
         this.state = {
             hover: false,
             inProgress: false,
+            errorState: false,
         };
     }
 
@@ -31,24 +32,32 @@ export default class FileArea extends Component {
     }
     
     loadFiles(files) {
-        this.setState({ hover: false, inProgress: true }, () => {
-            setTimeout(() => {
-                files.forEach(this.handleFile.bind(this));
-                setTimeout(() => {
-                    this.setState({ inProgress: false });
-                }, 1000);
-            }, 1500);
-        });
+        files.forEach(this.handleFile.bind(this));
     }
 
     handleFile(file) {
-        switch (file.type) {
+        if (file.type === 'text/csv'
+            || file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+            this.setState({ hover: false, inProgress: true }, () => {
+                setTimeout(() => {
+                    this.loadFile(file, file.type);
+                    setTimeout(() => {
+                        this.setState({ inProgress: false });
+                    }, 1000);
+                }, 1500);
+            });
+        } else {
+            return this.typeError(file.type);
+        }
+    }
+
+    loadFile(file, type) {
+        switch (type) {
             case 'text/csv':
                 return this.loadCSV(file);
             case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
                 return this.loadXLSX(file);
             default:
-                return console.warn('The file you are trying to map is not allowed');
         }
     }
 
@@ -71,6 +80,14 @@ export default class FileArea extends Component {
             this.props.loadData(XLSXutils.sheet_to_json(ws, {header: 1}), file.name);
         });
         reader.readAsBinaryString(file);
+    }
+
+    typeError(type) {
+        this.setState({ errorState: true }, () => {
+            setTimeout(() => {
+                this.setState({ errorState: false });
+            }, 600);
+        });
     }
 
     renderDropArea() {
@@ -110,6 +127,7 @@ export default class FileArea extends Component {
         if (this.state.hover) classes.push('app-file-area--hover');
         if (this.props.active) classes.push('app-file-area--active');
         if (this.state.inProgress) classes.push('app-file-area--in-progress');
+        if (this.state.errorState) classes.push('app-file-area--error');
         const content = (this.props.active)
             ? this.renderFileWidget()
             : this.renderDropArea();
