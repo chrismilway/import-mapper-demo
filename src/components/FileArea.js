@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
-import csvparse from 'csv-parse/lib/es5';
-import { read as XLSXread, utils as XLSXutils } from 'xlsx';
+import papa from 'papaparse';
 import Upload from './Upload';
 
 export default class FileArea extends Component {
@@ -9,7 +8,9 @@ export default class FileArea extends Component {
         this.state = {
             hover: false,
             inProgress: false,
+            processOnLoad: false,
             errorState: false,
+            queued: null,
         };
     }
 
@@ -22,64 +23,43 @@ export default class FileArea extends Component {
     }
 
     handleDrop(e) {
-        const files = Array.from(e.dataTransfer.files);
-        this.loadFiles(files);
+        this.loadFiles(e.dataTransfer.files);
     }
 
     handleSelect(e) {
         if (e.target.files.length)
-        this.loadFiles(Array.from(e.target.files));
-    }
-    
-    loadFiles(files) {
-        files.forEach(this.handleFile.bind(this));
+        this.loadFiles(e.target.files);
     }
 
-    handleFile(file) {
-        if (file.type === 'text/csv'
-            || file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-            this.setState({ hover: false, inProgress: true }, () => {
+    loadFiles(files) {
+        const file = files[0];
+        if (file.type === 'text/csv') {
+            this.setState({ hover: false, inProgress: true, processOnLoad: false, queued: null }, () => {
                 setTimeout(() => {
-                    this.loadFile(file, file.type);
-                    setTimeout(() => {
-                        this.setState({ inProgress: false });
-                    }, 1000);
-                }, 1500);
+                    if (this.state.queued) {
+                        this.props.loadData(this.state.queued, files);
+                        this.setState({ queued: null, inProgress: false, processOnLoad: false });
+                    } else {
+                        this.setState({ inProgress: false, processOnLoad: true });
+                    }
+                }, 1000);
+                this.loadFile(files, file.type);
             });
         } else {
             return this.typeError(file.type);
         }
     }
 
-    loadFile(file, type) {
-        switch (type) {
-            case 'text/csv':
-                return this.loadCSV(file);
-            case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
-                return this.loadXLSX(file);
-            default:
-        }
-    }
-
-    loadCSV(file) {
-        const reader = new FileReader();
-        reader.addEventListener('load', (e) => {
-            csvparse(e.target.result, (err, data) => {
-                this.props.loadData(data, file.name);
-            });
+    loadFile(files) {
+        papa.parse(files[0], {
+            preview: 3,
+            complete: (results) => {
+                console.log(this.state.processOnLoad);
+                this.state.processOnLoad
+                    ? this.props.loadData(results.data, files[0].name, files)
+                    : this.setState({ queued: results.data });
+            },
         });
-        reader.readAsText(file);
-    }
-
-    loadXLSX(file) {
-        const reader = new FileReader();
-        reader.addEventListener('load', (e) => {
-            const bstr = e.target.result;
-            const wb = XLSXread(bstr, {type: 'binary'});
-            const ws = wb.Sheets[wb.SheetNames[0]];
-            this.props.loadData(XLSXutils.sheet_to_json(ws, {header: 1}), file.name);
-        });
-        reader.readAsBinaryString(file);
     }
 
     typeError(type) {
@@ -113,7 +93,7 @@ export default class FileArea extends Component {
         return (
           <div className="app-file-widget">
             <strong className="app-file-widget--name">
-                {this.props.filename}
+                {this.props.file[0].name}
                 <span className="list-arrow">&#8674;</span>
                 {this.props.listname}
             </strong>

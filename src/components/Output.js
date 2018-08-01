@@ -34,10 +34,6 @@ export default class Output extends Component {
                     value={value} />
                 <input
                     type="hidden"
-                    name={`${this.props.name}-data`}
-                    value={JSON.stringify(this.props.data)} />
-                <input
-                    type="hidden"
                     name={`${this.props.name}-defaults`}
                     value={defaults} />
             </div>

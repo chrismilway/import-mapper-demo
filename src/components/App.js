@@ -10,11 +10,11 @@ class App extends Component {
     this.state = {
       data: [],
       columns: [],
-      filename: '',
+      file: null,
       mappings: {},
       allow_custom: false,
       input_name: '',
-      list_name: ''
+      list_name: '',
     };
   }
 
@@ -78,12 +78,14 @@ class App extends Component {
     this.setState({ mappings });
   }
 
-  handleData(data, filename) {
-    this.setState({ data, filename }, this.resetMappings);
+  handleData(data, file) {
+    this.setState({ data, file }, this.resetMappings);
+    this.fileInput.files = file;
   }
 
   clearData() {
-    this.setState({ data: [], filename: null, mappings: {} });
+    this.setState({ data: [], file: null, mappings: {} });
+    this.fileInput.files = null;
   }
 
   handleMap(header, column) {
@@ -163,7 +165,7 @@ class App extends Component {
           loadData={this.handleData.bind(this)}
           clearData={this.clearData.bind(this)}
           active={this.state.data.length}
-          filename={this.state.filename}
+          file={this.state.file}
           listname={this.state.list_name} />
         <Mapper
           height={mapperHeight}
@@ -174,7 +176,14 @@ class App extends Component {
           onMap={this.handleMap.bind(this)}
           onDeMap={this.handleDeMap.bind(this)}
           request={this.handleRequest.bind(this)} />
-        <Output mappings={this.state.mappings} data={this.state.data} name={this.state.input_name} />
+        <Output
+          mappings={this.state.mappings}
+          name={this.state.input_name} />
+        <input
+          type="file"
+          style={{display: 'none'}}
+          name={`${this.state.input_name}-file`}
+          ref={c => {this.fileInput = c}} />
       </div>
     );
   }
